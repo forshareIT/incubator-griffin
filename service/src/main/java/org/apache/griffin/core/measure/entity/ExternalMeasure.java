@@ -20,18 +20,21 @@ under the License.
 package org.apache.griffin.core.measure.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.griffin.core.job.entity.VirtualJob;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.OneToOne;
 
+import org.apache.griffin.core.job.entity.VirtualJob;
+
 /**
  * Measures to publish metrics that processed externally
  */
 @Entity
 public class ExternalMeasure extends Measure {
+    private static final long serialVersionUID = -7551493544224747244L;
 
     private String metricName;
 
@@ -43,12 +46,14 @@ public class ExternalMeasure extends Measure {
         super();
     }
 
-    public ExternalMeasure(String name, String description, String organization, String owner, String metricName, VirtualJob vj) {
+    public ExternalMeasure(String name, String description, String organization,
+                           String owner, String metricName, VirtualJob vj) {
         super(name, description, organization, owner);
         this.metricName = metricName;
         this.virtualJob = vj;
     }
 
+    @JsonProperty("metric.name")
     public String getMetricName() {
         return metricName;
     }

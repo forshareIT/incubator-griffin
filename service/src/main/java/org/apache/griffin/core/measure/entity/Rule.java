@@ -24,16 +24,27 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.apache.griffin.core.util.JsonUtil;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.PostLoad;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
+import javax.persistence.Transient;
+import javax.validation.constraints.NotNull;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.griffin.core.util.JsonUtil;
 
 
 @Entity
 public class Rule extends AbstractAuditableEntity {
+    private static final long serialVersionUID = -143019093509759648L;
 
     /**
      * three type:1.griffin-dsl 2.df-opr 3.spark-sql
@@ -41,17 +52,20 @@ public class Rule extends AbstractAuditableEntity {
     @NotNull
     private String dslType;
 
-    @NotNull
-    private String dqType;
+    @Enumerated(EnumType.STRING)
+    private DqType dqType;
 
     @Column(length = 8 * 1024)
     @NotNull
     private String rule;
 
-    private String name;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String inDataFrameName;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String outDataFrameName;
 
     @JsonIgnore
-//    @Access(AccessType.PROPERTY)
     @Column(length = 1024)
     private String details;
 
@@ -59,39 +73,32 @@ public class Rule extends AbstractAuditableEntity {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Map<String, Object> detailsMap;
 
-    @JsonIgnore
-//    @Access(AccessType.PROPERTY)
-    private String metric;
-
     @Transient
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Map<String, Object> metricMap;
+    private List<Map<String, Object>> outList;
 
     @JsonIgnore
-//    @Access(AccessType.PROPERTY)
-    private String record;
+    @Column(name = "\"out\"")
+    private String out;
 
-    @Transient
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Map<String, Object> recordMap;
+    private Boolean cache;
 
     @JsonProperty("dsl.type")
     public String getDslType() {
         return dslType;
     }
 
-    @JsonProperty("dsl.type")
     public void setDslType(String dslType) {
         this.dslType = dslType;
     }
 
     @JsonProperty("dq.type")
-    public String getDqType() {
+    public DqType getDqType() {
         return dqType;
     }
 
-    @JsonProperty("dq.type")
-    public void setDqType(String dqType) {
+    public void setDqType(DqType dqType) {
         this.dqType = dqType;
     }
 
@@ -103,37 +110,34 @@ public class Rule extends AbstractAuditableEntity {
         this.rule = rule;
     }
 
+    @JsonProperty("in.dataframe.name")
+    public String getInDataFrameName() {
+        return inDataFrameName;
+    }
+
+    public void setInDataFrameName(String inDataFrameName) {
+        this.inDataFrameName = inDataFrameName;
+    }
+
+    @JsonProperty("out.dataframe.name")
+    public String getOutDataFrameName() {
+        return outDataFrameName;
+    }
+
+    public void setOutDataFrameName(String outDataFrameName) {
+        this.outDataFrameName = outDataFrameName;
+    }
+
     @JsonProperty("details")
     public Map<String, Object> getDetailsMap() {
         return detailsMap;
     }
 
-    @JsonProperty("details")
     public void setDetailsMap(Map<String, Object> detailsMap) {
         this.detailsMap = detailsMap;
     }
 
-    @JsonProperty("metric")
-    public Map<String, Object> getMetricMap() {
-        return metricMap;
-    }
-
-    @JsonProperty("metric")
-    public void setMetricMap(Map<String, Object> metricMap) {
-        this.metricMap = metricMap;
-    }
-
-    @JsonProperty("record")
-    public Map<String, Object> getRecordMap() {
-        return recordMap;
-    }
-
-    @JsonProperty("record")
-    public void setRecordMap(Map<String, Object> recordMap) {
-        this.recordMap = recordMap;
-    }
-
-    public String getDetails() {
+    private String getDetails() {
         return details;
     }
 
@@ -141,28 +145,29 @@ public class Rule extends AbstractAuditableEntity {
         this.details = details;
     }
 
-    public String getMetric() {
-        return metric;
+    @JsonProperty("out")
+    public List<Map<String, Object>> getOutList() {
+        return outList;
     }
 
-    public void setMetric(String metric) {
-        this.metric = metric;
+    public void setOutList(List<Map<String, Object>> outList) {
+        this.outList = outList;
     }
 
-    public String getRecord() {
-        return record;
+    private String getOut() {
+        return out;
     }
 
-    public void setRecord(String record) {
-        this.record = record;
+    private void setOut(String out) {
+        this.out = out;
     }
 
-    public String getName() {
-        return name;
+    public Boolean getCache() {
+        return cache;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setCache(Boolean cache) {
+        this.cache = cache;
     }
 
     @PrePersist
@@ -171,27 +176,21 @@ public class Rule extends AbstractAuditableEntity {
         if (detailsMap != null) {
             this.details = JsonUtil.toJson(detailsMap);
         }
-        if (metricMap != null) {
-            this.metric = JsonUtil.toJson(metricMap);
+        if (outList != null) {
+            this.out = JsonUtil.toJson(outList);
         }
-        if (recordMap != null) {
-            this.record = JsonUtil.toJson(recordMap);
-        }
-
     }
 
     @PostLoad
     public void load() throws IOException {
-        if (!org.springframework.util.StringUtils.isEmpty(details)) {
-            this.detailsMap = JsonUtil.toEntity(details, new TypeReference<Map<String, Object>>() {
+        if (!StringUtils.isEmpty(details)) {
+            this.detailsMap = JsonUtil.toEntity(
+                details, new TypeReference<Map<String, Object>>() {
             });
         }
-        if (!org.springframework.util.StringUtils.isEmpty(metric)) {
-            this.metricMap = JsonUtil.toEntity(metric, new TypeReference<Map<String, Object>>() {
-            });
-        }
-        if (!org.springframework.util.StringUtils.isEmpty(record)) {
-            this.recordMap = JsonUtil.toEntity(record, new TypeReference<Map<String, Object>>() {
+        if (!StringUtils.isEmpty(out)) {
+            this.outList = JsonUtil.toEntity(
+                out, new TypeReference<List<Map<String, Object>>>() {
             });
         }
     }
@@ -199,10 +198,26 @@ public class Rule extends AbstractAuditableEntity {
     public Rule() {
     }
 
-    public Rule(String dslType, String dqType, String rule, Map<String, Object> detailsMap) throws JsonProcessingException {
+    public Rule(String dslType,
+                DqType dqType,
+                String rule,
+                Map<String, Object> detailsMap)
+        throws JsonProcessingException {
         this.dslType = dslType;
         this.dqType = dqType;
         this.rule = rule;
+        this.detailsMap = detailsMap;
         this.details = JsonUtil.toJson(detailsMap);
+    }
+
+    public Rule(String dslType, DqType dqType, String rule,
+                String inDataFrameName, String outDataFrameName,
+                Map<String, Object> detailsMap,
+                List<Map<String, Object>> outList)
+        throws JsonProcessingException {
+        this(dslType, dqType, rule, detailsMap);
+        this.inDataFrameName = inDataFrameName;
+        this.outDataFrameName = outDataFrameName;
+        this.outList = outList;
     }
 }

@@ -24,31 +24,48 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.apache.griffin.core.job.entity.SegmentPredicate;
-import org.apache.griffin.core.util.JsonUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.StringUtils;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+
+import org.apache.griffin.core.job.entity.SegmentPredicate;
+import org.apache.griffin.core.util.JsonUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 @Entity
 public class DataConnector extends AbstractAuditableEntity {
     private static final long serialVersionUID = -4748881017029815594L;
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(DataConnector.class);
+    private final static Logger LOGGER = LoggerFactory
+        .getLogger(DataConnector.class);
+
+    public enum DataType {
+        /**
+         * There are three data source type which we support now.
+         */
+        HIVE,
+        KAFKA,
+        AVRO,
+        CUSTOM
+    }
 
     @NotNull
     private String name;
 
-    private String type;
+    @Enumerated(EnumType.STRING)
+    private DataType type;
 
     private String version;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String dataFrameName;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String dataUnit;
@@ -61,15 +78,22 @@ public class DataConnector extends AbstractAuditableEntity {
     private String defaultDataUnit = "365000d";
 
     @JsonIgnore
-//    @Access(AccessType.PROPERTY)
+    @Column(length = 20480)
     private String config;
 
     @Transient
-    private Map<String, String> configMap;
+    private Map<String, Object> configMap;
 
-    @OneToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.REMOVE, CascadeType.MERGE})
+    @OneToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST,
+        CascadeType.REMOVE, CascadeType.MERGE})
     @JoinColumn(name = "data_connector_id")
     private List<SegmentPredicate> predicates = new ArrayList<>();
+
+    @OneToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST,
+        CascadeType.REMOVE, CascadeType.MERGE})
+    @JoinColumn(name = "pre_process_id")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<StreamingPreProcess> preProcess;
 
     public List<SegmentPredicate> getPredicates() {
         return predicates;
@@ -79,22 +103,39 @@ public class DataConnector extends AbstractAuditableEntity {
         this.predicates = predicates;
     }
 
+    @JsonProperty("pre.proc")
+    public List<StreamingPreProcess> getPreProcess() {
+        return CollectionUtils.isEmpty(preProcess) ? null : preProcess;
+    }
+
+    public void setPreProcess(List<StreamingPreProcess> preProcess) {
+        this.preProcess = preProcess;
+    }
+
     @JsonProperty("config")
-    public Map<String, String> getConfigMap() {
+    public Map<String, Object> getConfigMap() {
         return configMap;
     }
 
-    @JsonProperty("config")
-    public void setConfigMap(Map<String, String> configMap) {
+    public void setConfigMap(Map<String, Object> configMap) {
         this.configMap = configMap;
     }
 
-    public void setConfig(String config) {
+    private void setConfig(String config) {
         this.config = config;
     }
 
-    public String getConfig() {
+    private String getConfig() {
         return config;
+    }
+
+    @JsonProperty("dataframe.name")
+    public String getDataFrameName() {
+        return dataFrameName;
+    }
+
+    public void setDataFrameName(String dataFrameName) {
+        this.dataFrameName = dataFrameName;
     }
 
     @JsonProperty("data.unit")
@@ -102,7 +143,6 @@ public class DataConnector extends AbstractAuditableEntity {
         return dataUnit;
     }
 
-    @JsonProperty("data.unit")
     public void setDataUnit(String dataUnit) {
         this.dataUnit = dataUnit;
     }
@@ -112,7 +152,6 @@ public class DataConnector extends AbstractAuditableEntity {
         return dataTimeZone;
     }
 
-    @JsonProperty("data.time.zone")
     public void setDataTimeZone(String dataTimeZone) {
         this.dataTimeZone = dataTimeZone;
     }
@@ -137,11 +176,11 @@ public class DataConnector extends AbstractAuditableEntity {
         this.name = name;
     }
 
-    public String getType() {
+    public DataType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(DataType type) {
         this.type = type;
     }
 
@@ -163,26 +202,31 @@ public class DataConnector extends AbstractAuditableEntity {
 
     @PostLoad
     public void load() throws IOException {
-        if (!org.springframework.util.StringUtils.isEmpty(config)) {
-            this.configMap = JsonUtil.toEntity(config, new TypeReference<Map<String, Object>>() {
-            });
+        if (!StringUtils.isEmpty(config)) {
+            this.configMap = JsonUtil.toEntity(config,
+                new TypeReference<Map<String, Object>>() {
+                });
         }
     }
-
 
     public DataConnector() {
     }
 
-    public DataConnector(String name, String type, String version, String config) throws IOException {
+    public DataConnector(String name, DataType type, String version,
+                         String config, String dataFrameName)
+        throws IOException {
         this.name = name;
         this.type = type;
         this.version = version;
         this.config = config;
-        this.configMap = JsonUtil.toEntity(config, new TypeReference<Map<String, String>>() {
-        });
+        this.configMap = JsonUtil.toEntity(config,
+            new TypeReference<Map<String, Object>>() {
+            });
+        this.dataFrameName = dataFrameName;
     }
 
-    public DataConnector(String name, String dataUnit, Map<String,String> configMap, List<SegmentPredicate> predicates) {
+    public DataConnector(String name, String dataUnit, Map configMap,
+                         List<SegmentPredicate> predicates) {
         this.name = name;
         this.dataUnit = dataUnit;
         this.configMap = configMap;
@@ -192,10 +236,10 @@ public class DataConnector extends AbstractAuditableEntity {
     @Override
     public String toString() {
         return "DataConnector{" +
-                "name=" + name +
-                "type=" + type +
-                ", version='" + version + '\'' +
-                ", config=" + config +
-                '}';
+            "name=" + name +
+            "type=" + type +
+            ", version='" + version + '\'' +
+            ", config=" + config +
+            '}';
     }
 }

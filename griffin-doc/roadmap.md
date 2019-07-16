@@ -19,43 +19,34 @@ under the License.
 # Apache Griffin Roadmap
 
 ## Current feature list
-In the current version, we've implemented the below main DQ features
+In the current release, we've implemented main DQ features below
 
-- **Data Asset Management**
-
-  User can register, delete, edit data assets, currently only Hadoop data-sets are supported
+- **Data Asset Detection**
+  Enabling configuration in service module, Apache Griffin can detect the Hive tables metadata through Hive metastore service.
 
 - **Measure Management**
+  Performing operations on UI, user can create, delete and update three types of measures, including: accuracy, profiling and publish metrics.
+  However, calling service APIs, user can create, delete and update six types of measures, including: accuracy, profiling, timeliness, uniqueness, completeness and publish metrics.
 
-  User can create, delete, edit measures for 4 types: Accuracy, Profiling, Anomaly Detection, Publish Metrics
+- **Job Management**
+  User can create, delete jobs to schedule a batch job for calculative measures, data range of each calculation, and the extra trigger condition like "done file" on hdfs.
 
-- **Job Scheduler**
-
-  After the measures are created, the Job Scheduler component can create the jobs and schedule them to calculate the metrics values
-
-- **Measure Execution on Spark**
-
-  The Job Scheduler will trigger the measure execution on Spark to generate the metrics values
+- **Measure Calculation on Spark**
+  Service module will trigger and submit calculation jobs to Spark cluster through livy, the measure module calculates and persists the metric values to elasticsearch by default.
 
 - **Metrics Visualization**
-
-  We have a web portal to display all metrics
-
-- **My Dashboard**
-
-  Only the interested metrics will be displayed on "My Dashboard"
+  Through service APIs, user can get metric values of each job from elasticsearch.
+  Accuracy metrics will be rendered as a chart, profiling metrics will be showed as a table on UI.
 
 
 ## Short-term Roadmap
 
-- **Support more data-set types**  
-
-  Current we only support Hadoop datasets, we should also support RDBMS and real-time streaming data from Kafka, Storm, etc.
+- **Support more data source types**
+  Currently, Apache Griffin only supports Hive table, avro files on hdfs as data source in batch mode, Kafka as data source in streaming mode.
+  We plan to support more data source types, like RDBM, elasticsearch.
 
 - **Support more data quality dimensions**
+  Apache Griffin needs to support more data quality dimensions, like consistency and validity.
 
-  Besides accuracy, there are some other data quality dimensions(Completeness, Uniqueness, Timeliness, Validity, Consistency), we should support more dimensions
-
-- **More ML algorithms for Anomaly Detection measure**
-
-  Currently only [MAD(Median absolute deviation)](https://en.wikipedia.org/wiki/Median_absolute_deviation) and [Bollinger Bands](https://en.wikipedia.org/wiki/Bollinger_Bands) are supported, we are considering to support more Machine Learning algorithms
+- **Anomaly Detection**
+  Apache Griffin plans to support anomaly detection, by analyzing metrics calculated from elasticsearch.

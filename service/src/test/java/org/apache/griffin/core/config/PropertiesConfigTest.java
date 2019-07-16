@@ -19,6 +19,10 @@ under the License.
 
 package org.apache.griffin.core.config;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.Properties;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,11 +30,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import java.io.FileNotFoundException;
-import java.util.Properties;
-
-import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringRunner.class)
 public class PropertiesConfigTest {
@@ -40,32 +39,32 @@ public class PropertiesConfigTest {
 
         @Bean(name = "noLivyConf")
         public PropertiesConfig noSparkConf() {
-            return new PropertiesConfig(null);
+            return new PropertiesConfig(null, null);
         }
 
         @Bean(name = "livyConf")
         public PropertiesConfig sparkConf() {
-            return new PropertiesConfig("src/test/resources");
+            return new PropertiesConfig("src/test/resources", null);
         }
 
         @Bean(name = "livyNotFoundConfig")
         public PropertiesConfig sparkNotFoundConfig() {
-            return new PropertiesConfig("test");
+            return new PropertiesConfig("test", null);
         }
 
         @Bean(name = "noQuartzConf")
         public PropertiesConfig noQuartzConf() {
-            return new PropertiesConfig(null);
+            return new PropertiesConfig(null, null);
         }
 
         @Bean(name = "quartzConf")
         public PropertiesConfig quartzConf() {
-            return new PropertiesConfig("src/test/resources");
+            return new PropertiesConfig("src/test/resources", null);
         }
 
         @Bean(name = "quartzNotFoundConfig")
         public PropertiesConfig quartzNotFoundConfig() {
-            return new PropertiesConfig("test");
+            return new PropertiesConfig("test", null);
         }
     }
 
@@ -95,43 +94,34 @@ public class PropertiesConfigTest {
     private PropertiesConfig quartzNotFoundConfig;
 
     @Test
-    public void appConf() {
-        Properties conf = noLivyConf.appConf();
-        assertEquals(conf.get("spring.datasource.username"), "test");
+    public void appConf() throws Exception {
+        String conf = (String) noLivyConf.livyConfMap.get("name");
+        assertEquals("test", conf);
     }
 
     @Test
     public void livyConfWithLocationNotNull() throws Exception {
-        Properties conf = livyConf.livyConf();
-        assertEquals(conf.get("sparkJob.name"), "test");
+        String conf = (String) livyConf.livyConfMap.get("sparkJob.name");
+        assertEquals("testJob", conf);
     }
 
     @Test
     public void livyConfWithLocationNull() throws Exception {
-        Properties conf = noLivyConf.livyConf();
-        assertEquals(conf.get("sparkJob.name"), "test");
-    }
-
-    @Test(expected = FileNotFoundException.class)
-    public void livyConfWithFileNotFoundException() throws FileNotFoundException {
-        livyNotFoundConfig.livyConf();
+        String conf = (String) noLivyConf.livyConfMap.get("sparkJob.name");
+        assertEquals("testJob", conf);
     }
 
     @Test
     public void quartzConfWithLocationNotNull() throws Exception {
         Properties conf = quartzConf.quartzConf();
-        assertEquals(conf.get("org.quartz.scheduler.instanceName"), "spring-boot-quartz-test");
+        assertEquals(conf.get("org.quartz.scheduler.instanceName"),
+                "spring-boot-quartz-test");
     }
 
     @Test
     public void quartzConfWithLocationNull() throws Exception {
         Properties conf = noQuartzConf.quartzConf();
-        assertEquals(conf.get("org.quartz.scheduler.instanceName"), "spring-boot-quartz-test");
+        assertEquals(conf.get("org.quartz.scheduler.instanceName"),
+                "spring-boot-quartz-test");
     }
-
-    @Test(expected = FileNotFoundException.class)
-    public void quartzConfWithFileNotFoundException() throws FileNotFoundException {
-        quartzNotFoundConfig.livyConf();
-    }
-
 }

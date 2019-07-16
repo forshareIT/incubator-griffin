@@ -20,8 +20,41 @@ under the License.
 # Mysql and postgresql switch
 
 ## Overview
-By default, Griffin uses EclipseLink as the default JPA implementation. 
-## Use postgresql database 
+Apache Griffin uses EclipseLink as the default JPA implementation, which supports two kinds of database, mysql and postgresql. This document mainly describes the steps of how to switch mysql and postgresql as backend database.
+
+- [Mysql database](#1.1)
+- [Postgresql database](#1.2)
+
+<h2 id = "1.1"></h2>
+
+## Mysql database 
+### Add mysql dependency
+
+    <dependency>
+        <groupId>mysql</groupId>
+        <artifactId>mysql-connector-java</artifactId>
+    </dependency>
+### Configure properties
+
+- configure application.properties
+
+        spring.datasource.url = jdbc:mysql://localhost:3306/quartz?autoReconnect=true&useSSL=false
+        spring.datasource.username = griffin
+        spring.datasource.password = 123456
+        spring.jpa.generate-ddl=true
+        spring.datasource.driver-class-name = com.mysql.jdbc.Driver
+        spring.jpa.show-sql = true
+   If you use hibernate as your jpa implentation, you need also to add following configuration.
+     
+        spring.jpa.hibernate.ddl-auto = update
+        spring.jpa.hibernate.naming-strategy = org.hibernate.cfg.ImprovedNamingStrategy
+- configure quartz.properties
+
+      org.quartz.jobStore.driverDelegateClass=org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+
+<h2 id = "1.2"></h2>
+
+## Postgresql database 
 
 ### Add postgresql dependency
 
@@ -48,28 +81,3 @@ By default, Griffin uses EclipseLink as the default JPA implementation.
 
       org.quartz.jobStore.driverDelegateClass=org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
       
-## Use mysql database 
-### Add mysql dependency
-
-    <dependency>
-        <groupId>mysql</groupId>
-        <artifactId>mysql-connector-java</artifactId>
-    </dependency>
-### Configure properties
-
-- configure application.properties
-
-        spring.datasource.url = jdbc:mysql://localhost:3306/quartz?autoReconnect=true&useSSL=false
-        spring.datasource.username = griffin
-        spring.datasource.password = 123456
-        spring.jpa.generate-ddl=true
-        spring.datasource.driver-class-name = com.mysql.jdbc.Driver
-        spring.jpa.show-sql = true
-   If you use hibernate as your jpa implentation, you need also to add following configuration.
-     
-        spring.jpa.hibernate.ddl-auto = update
-        spring.jpa.hibernate.naming-strategy = org.hibernate.cfg.ImprovedNamingStrategy
-- configure quartz.properties
-
-      org.quartz.jobStore.driverDelegateClass=org.quartz.impl.jdbcjobstore.StdJDBCDelegate
-

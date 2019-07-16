@@ -16,13 +16,13 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 */
-import { Component, OnInit } from "@angular/core";
-import { HttpClient } from "@angular/common/http";
-import { Router } from "@angular/router";
-import { ChartService } from "../service/chart.service";
-import { DatePipe } from "@angular/common";
-import { ServiceService } from "../service/service.service";
-import { TruncatePipe } from "./truncate.pipe";
+import {Component, OnInit} from "@angular/core";
+import {HttpClient} from "@angular/common/http";
+import {Router} from "@angular/router";
+import {ChartService} from "../service/chart.service";
+import {DatePipe} from "@angular/common";
+import {ServiceService} from "../service/service.service";
+import {TruncatePipe} from "./truncate.pipe";
 import * as $ from "jquery";
 
 @Component({
@@ -37,9 +37,9 @@ export class SidebarComponent implements OnInit {
     private router: Router,
     public serviceService: ServiceService,
     public chartService: ChartService
-  ) {}
+  ) {
+  }
 
-  // finalData = [];
   finalData = [];
   chartOption = new Map();
   orgWithMeasure: any;
@@ -51,7 +51,8 @@ export class SidebarComponent implements OnInit {
       data => {
         this.sideBarList(null);
       },
-      err => {}
+      err => {
+      }
     );
   }
 
@@ -67,7 +68,7 @@ export class SidebarComponent implements OnInit {
   resizeSideChart() {
     $("#side-bar-metrics").css({
       height:
-        $("#mainContent").height() - $("#side-bar-stats").outerHeight() + 70
+      $("#mainContent").height() - $("#side-bar-stats").outerHeight() + 70
     });
     for (let i = 0; i < this.finalData.length; i++) {
       for (let j = 0; j < this.finalData[i].metrics.length; j++) {
@@ -87,7 +88,7 @@ export class SidebarComponent implements OnInit {
     this.chartOption.set(chartId, this.chartService.getOptionSide(metric));
     var self = this;
     $("#" + chartId).unbind("click");
-    $("#" + chartId).click(function(e) {
+    $("#" + chartId).click(function (e) {
       self.router.navigate([
         "/detailed/" + self.finalData[parentIndex].metrics[index].name
       ]);
@@ -97,8 +98,8 @@ export class SidebarComponent implements OnInit {
   getOption(parent, i) {
     return this.chartOption.get("chart" + parent + "-" + i);
   }
-  
-  checkvalue(job){
+
+  checkvalue(job) {
     return job.metricValues.length === 0;
   }
 
@@ -106,15 +107,15 @@ export class SidebarComponent implements OnInit {
     let url_dashboard = this.serviceService.config.uri.dashboard;
     this.http.get(url_dashboard).subscribe(data => {
       this.mesWithJob = JSON.parse(JSON.stringify(data));
-      for(let i=0;i<this.mesWithJob.length;i++) {
-        if(this.mesWithJob[i].some(this.checkvalue)){
-          this.mesWithJob[i].splice(i,1);
+      for (let i = 0; i < this.mesWithJob.length; i++) {
+        if (this.mesWithJob[i].some(this.checkvalue)) {
+          this.mesWithJob[i].splice(i, 1);
         }
       }
       for (let mesName in this.mesWithJob) {
         var jobs = this.mesWithJob[mesName];
         if (
-          jobs.length > 0 && jobs[0].type == "accuracy"
+          jobs.length > 0 && jobs[0].type == "ACCURACY"
         ) {
           var jobs = this.mesWithJob[mesName];
           var node = null;
@@ -122,10 +123,10 @@ export class SidebarComponent implements OnInit {
           node.name = mesName;
           node.dq = 0;
           node.metrics = [];
-          node.type = "accuracy";
+          node.type = "ACCURACY";
           for (let i = 0; i < jobs.length; i++) {
             if (jobs[i].metricValues.length != 0) {
-              var someMetrics = jobs[i].metricValues.slice(0,30);
+              var someMetrics = jobs[i].metricValues.slice(0, 30);
               jobs[i].metricValues = JSON.parse(
                 JSON.stringify(someMetrics)
               );

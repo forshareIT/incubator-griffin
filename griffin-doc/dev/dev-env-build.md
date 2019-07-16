@@ -17,13 +17,13 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-# Apache Griffin Development Environment Build Guide
-We have pre-built Griffin docker images for Griffin developers. You can use the images directly, which should be much faster than building the environment locally.
+# Apache Griffin Development Environment Building Guide
+We have pre-built Apache Griffin docker images for Apache Griffin developers. You can use those images directly, which set up a ready development environment for you much faster than building the environment locally.
 
 ## Set Up with Docker Images
-Here are step-by-step instructions on how to [pull Docker images](../docker/griffin-docker-guide.md#environment-preparation) from the repository and run containers using the images.
+Here are step-by-step instructions of how to [pull Docker images](../docker/griffin-docker-guide.md#environment-preparation) from the repository and run containers using the images.
 
-## Run or Debug at local
+## Run or Debug locally
 ### For service module
 If you need to develop the service module, you need to modify some configuration in the following files.
 Docker host is your machine running the docker containers, which means if you install docker and run docker containers on 192.168.100.100, then the `<docker host ip>` is 192.168.100.100.
@@ -42,44 +42,52 @@ In service/src/main/resources/sparkJob.properties
 ```
 livy.uri=http://<docker host ip>:38998/batches
 
-spark.uri=http://<docker host ip>:38088
+yarn.uri=http://<docker host ip>:38088
 ```
 
-Now you can start the service module in your local IDE, by running or debugging org.apache.griffin.core.GriffinWebApplication.
+Now you can start the service module in your local IDE, running or debugging org.apache.griffin.core.GriffinWebApplication.
 
-### For ui module
-If you need to develop the ui module only, you need to modify some configuration.
+### For UI module
+If you only wanna develop the UI module, you just need to modify some configuration.
 
 In ui/angular/src/app/service/service.service.ts
 ```
 // public BACKEND_SERVER = "";
 public BACKEND_SERVER = 'http://<docker host ip>:38080';
 ```
-After this, you can test your ui module by using remote service.
+Making the change above, you can test your UI module by using remote service.
 
-However, in most conditions, you need to develop the ui module with some modification in service module.
+However, on the most of conditions, you need to develop the UI module with some modification in service module.
 Then you need to follow the steps above for service module first, and
-In ui/angular/src/app/service/service.service.ts
+in ui/angular/src/app/service/service.service.ts
 ```
 // public BACKEND_SERVER = "";
 public BACKEND_SERVER = 'http://localhost:8080';
 ```
-After this, you can start service module at local, and test your ui module by using local service.
+Making the change, you can start service module locally, and test your UI module using local service.
+
+After that, you can run local server using following command:
+```
+cd ui/angular 
+../angular/node_modules/.bin/ng serve --port 8080
+```
 
 ### For measure module
-If you need to develop the measure module only, you can ignore any of the service or ui module.
-You can test your built measure JAR in the docker container, using the existed spark environment.
+If you only wanna develop the measure module, you can ignore both of service or UI module.
+You can test your measure JAR built in the docker container, using the existed spark environment.
 
-For debug phase, you'd better install hadoop, spark, hive at local, and test your program at local for fast.
+For debug purpose, you'd better install hadoop, spark, hive locally, so you can test your program more quickly.
+
+Note: If you run Hadoop in a pseudo-distributed mode on MacOS you have to update hdfs-site.xml, namely, comment out the parameters **dfs.namenode.servicerpc-address** and **dfs.namenode.rpc-address**, otherwise you can get the error like: "java.net.ConnectException: Call From mycomputer/127.0.1.1 to localhost:9000 failed on connection exception: java.net.ConnectException: Connection refused; For more details see:  http://wiki.apache.org/hadoop/ConnectionRefused"
 
 ## Deploy on docker container
-First, in the incubator-griffin directory, build you packages at once.
+Firstly, in the griffin directory, build your packages at once.
 ```
 mvn clean install
 ```
 
 ### For service module and ui module
-1. Login to docker container, and stop running griffin service.
+1. Login to docker container, and stop running Apache Griffin service.
 ```
 docker exec -it <griffin docker container id> bash
 cd ~/service
@@ -108,23 +116,23 @@ docker exec -it <griffin docker container id> bash
 hadoop fs -rm /griffin/griffin-measure.jar
 hadoop fs -put /root/measure/griffin-measure.jar /griffin/griffin-measure.jar
 ```
-Now the griffin service will submit jobs by using this new griffin-measure.jar.
+Now the Apache Griffin service will submit jobs by using this new griffin-measure.jar.
 
-## Build new griffin docker image
-For end2end test, you will need to build a new griffin docker image, for more convenient test.
+## Build new Apache Griffin docker image
+For end2end test, you will need to build a new Apache Griffin docker image, for more convenient test.
 1. Pull the docker build repo on your docker host.
 ```
 git clone https://github.com/bhlx3lyx7/griffin-docker.git
 ```
-2. Copy your measure and service JAR into svc_msr_new directory.
+2. Copy your measure and service JAR into griffin_spark2 directory.
 ```
-cp service-<version>.jar <path to>/griffin-docker/svc_msr_new/prep/service/service.jar
-cp measure-<version>.jar <path to>/griffin-docker/svc_msr_new/prep/measure/griffin-measure.jar
+cp service-<version>.jar <path to>/griffin-docker/griffin_spark2/prep/service/service.jar
+cp measure-<version>.jar <path to>/griffin-docker/griffin_spark2/prep/measure/griffin-measure.jar
 ```
-3. Build your new griffin docker image.
-In svc_msr_new directory.
+3. Build your new Apache Griffin docker image.
+In griffin_spark2 directory.
 ```
-cd <path to>/griffin-docker/svc_msr_new
+cd <path to>/griffin-docker/griffin_spark2
 docker build -t <image name>[:<image version>] .
 ```
 4. If you are using another image name (or version), you need also modify the docker-compose file you're using.
@@ -132,7 +140,7 @@ docker build -t <image name>[:<image version>] .
 griffin:
   image: <image name>[:<image version>]
 ```
-5. Now you can run your new griffin docker image.
+5. Now you can run your new Apache Griffin docker image.
 ```
 docker-compose -f <docker-compose file> up -d
 ```

@@ -19,21 +19,21 @@ under the License.
 
 package org.apache.griffin.core.job;
 
+import static org.apache.griffin.core.job.JobInstance.PATH_CONNECTOR_CHARACTER;
+
+import java.io.IOException;
+import java.util.Map;
+
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.griffin.core.job.entity.SegmentPredicate;
 import org.apache.griffin.core.util.FSUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.CollectionUtils;
-
-import java.io.IOException;
-import java.util.Map;
-
-import static org.apache.griffin.core.job.JobInstance.PATH_CONNECTOR_CHARACTER;
 
 public class FileExistPredicator implements Predicator {
-    private static final Logger LOGGER = LoggerFactory.getLogger(FileExistPredicator.class);
+    private static final Logger LOGGER = LoggerFactory
+            .getLogger(FileExistPredicator.class);
 
     private static final String PREDICT_PATH = "path";
     private static final String PREDICT_ROOT_PATH = "root.path";
@@ -46,15 +46,18 @@ public class FileExistPredicator implements Predicator {
 
     @Override
     public boolean predicate() throws IOException {
-        Map<String, String> config = predicate.getConfigMap();
+        Map<String, Object> config = predicate.getConfigMap();
         String[] paths = null;
         String rootPath = null;
-        if (config != null && !StringUtils.isEmpty(config.get(PREDICT_PATH))) {
-            paths = config.get(PREDICT_PATH).split(PATH_CONNECTOR_CHARACTER);
-            rootPath = config.get(PREDICT_ROOT_PATH);
+        if (config != null && !StringUtils.isEmpty((String) config.get
+                (PREDICT_PATH))) {
+            paths = ((String) config.get(PREDICT_PATH)).split
+                    (PATH_CONNECTOR_CHARACTER);
+            rootPath = (String) config.get(PREDICT_ROOT_PATH);
         }
         if (ArrayUtils.isEmpty(paths) || StringUtils.isEmpty(rootPath)) {
-            LOGGER.error("Predicate path is null.Please check predicates config root.path and path.");
+            LOGGER.error("Predicate path is null.Please check predicates " +
+                    "config root.path and path.");
             throw new NullPointerException();
         }
         for (String path : paths) {

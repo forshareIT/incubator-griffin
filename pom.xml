@@ -30,10 +30,10 @@ under the License.
 
     <groupId>org.apache.griffin</groupId>
     <artifactId>griffin</artifactId>
-    <version>0.2.0-incubating-SNAPSHOT</version>
+    <version>0.6.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Apache Griffin ${project.version}</name>
-    <url>http://griffin.incubator.apache.org</url>
+    <url>http://griffin.apache.org</url>
 
     <prerequisites>
         <maven>3.2.5</maven>
@@ -69,19 +69,16 @@ under the License.
     <mailingLists>
         <mailingList>
             <name>griffin-dev</name>
-            <subscribe>dev-subscribe@griffin.incubator.apache.org</subscribe>
-            <unsubscribe>dev-unsubscribe@griffin.incubator.apache.org</unsubscribe>
-            <post>dev@griffin.incubator.apache.org</post>
+            <subscribe>dev-subscribe@griffin.apache.org</subscribe>
+            <unsubscribe>dev-unsubscribe@griffin.apache.org</unsubscribe>
+            <post>dev@griffin.apache.org</post>
         </mailingList>
     </mailingLists>
 
-    <!--<pluginRepositories>-->
-    <!--</pluginRepositories>-->
-
     <scm>
-        <connection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-griffin.git</connection>
-        <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-griffin.git</developerConnection>
-        <url>https://git-wip-us.apache.org/repos/asf?p=incubator-griffin.git;a=summary</url>
+        <connection>scm:git:https://gitbox.apache.org/repos/asf/griffin.git</connection>
+        <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/griffin.git</developerConnection>
+        <url>https://gitbox.apache.org/repos/asf?p=griffin.git;a=summary</url>
         <tag>HEAD</tag>
     </scm>
 
@@ -95,6 +92,16 @@ under the License.
         <module>measure</module>
     </modules>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>4.12</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <pluginManagement>
@@ -139,6 +146,7 @@ under the License.
                             <exclude>**/*.db</exclude>
                             <exclude>**/velocity.log*</exclude>
                             <exclude>**/*.json</exclude>
+                            <exclude>**/*.csv</exclude>
                             <exclude>**/*.avro</exclude>
                             <exclude>**/*.dat</exclude>
                             <exclude>**/banner.txt</exclude>
@@ -166,13 +174,7 @@ under the License.
                 </plugin>
             </plugins>
         </pluginManagement>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-            </plugin>
 
-        </plugins>
     </build>
 
 </project>

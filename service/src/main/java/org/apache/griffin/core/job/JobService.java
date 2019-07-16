@@ -19,29 +19,36 @@ under the License.
 
 package org.apache.griffin.core.job;
 
-import org.apache.griffin.core.job.entity.JobDataBean;
+import java.util.List;
+
+import org.apache.griffin.core.job.entity.AbstractJob;
 import org.apache.griffin.core.job.entity.JobHealth;
 import org.apache.griffin.core.job.entity.JobInstanceBean;
-import org.apache.griffin.core.job.entity.JobSchedule;
 import org.quartz.SchedulerException;
-
-import java.util.List;
 
 public interface JobService {
 
-    List<JobDataBean> getAliveJobs();
+    List<AbstractJob> getAliveJobs(String type);
 
-    JobSchedule getJobSchedule(String jobName);
+    AbstractJob addJob(AbstractJob js) throws Exception;
 
-    JobSchedule addJob(JobSchedule jobSchedule) throws Exception;
+    AbstractJob getJobConfig(Long jobId);
 
-    void pauseJob(String group, String name) throws SchedulerException;
+    AbstractJob onAction(Long jobId, String action) throws Exception;
 
-    void deleteJob(Long jobId);
+    void deleteJob(Long jobId) throws SchedulerException;
 
-    void deleteJob(String jobName);
+    void deleteJob(String jobName) throws SchedulerException;
 
     List<JobInstanceBean> findInstancesOfJob(Long jobId, int page, int size);
 
+    List<JobInstanceBean> findInstancesByTriggerKey(String triggerKey);
+
     JobHealth getHealthInfo();
+
+    String getJobHdfsSinksPath(String jobName, long timestamp);
+
+    JobInstanceBean findInstance(Long id);
+
+    String triggerJobById(Long id) throws SchedulerException;
 }

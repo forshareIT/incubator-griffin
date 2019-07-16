@@ -19,9 +19,6 @@ under the License.
 
 package org.apache.griffin.core.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -31,13 +28,23 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class TimeUtil {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TimeUtil.class);
-    private static final String MILLISECONDS_PATTERN = "(?i)m(illi)?s(ec(ond)?)?";
-    private static final String SECONDS_PATTERN = "(?i)s(ec(ond)?)?";
-    private static final String MINUTES_PATTERN = "(?i)m(in(ute)?)?";
-    private static final String HOURS_PATTERN = "(?i)h((ou)?r)?";
-    private static final String DAYS_PATTERN = "(?i)d(ay)?";
+    private static final Logger LOGGER = LoggerFactory.getLogger(TimeUtil
+            .class);
+    private static final String MILLISECONDS_PATTERN =
+            "(?i)m(illi)?s(ec(ond)?)?";
+    private static final String SECONDS_PATTERN =
+            "(?i)s(ec(ond)?)?";
+    private static final String MINUTES_PATTERN =
+            "(?i)m(in(ute)?)?";
+    private static final String HOURS_PATTERN =
+            "(?i)h((ou)?r)?";
+    private static final String DAYS_PATTERN =
+            "(?i)d(ay)?";
 
     private static class TimeUnitPair {
         private long t;
@@ -106,7 +113,10 @@ public class TimeUtil {
         } else if (unit.matches(DAYS_PATTERN)) {
             return milliseconds(t, TimeUnit.DAYS);
         } else {
-            LOGGER.warn("Time string format error.It only supports d(day),h(hour),m(minute),s(second),ms(millsecond).Please check your time format.");
+            LOGGER.warn("Time string format ERROR. " +
+                    "It only supports d(day),h(hour), m(minute), " +
+                    "s(second), ms(millsecond). " +
+                    "Please check your time format.");
             return 0L;
         }
     }
@@ -137,6 +147,13 @@ public class TimeUtil {
         String escapeHashTagPattern = "\\\\#";
         String hashTag = "#";
         return str.replaceAll(escapeHashTagPattern, hashTag);
+    }
+
+    public static TimeZone getTimeZone(String timezone) {
+        if (StringUtils.isEmpty(timezone)) {
+            return TimeZone.getDefault();
+        }
+        return TimeZone.getTimeZone(timezone);
     }
 
 }

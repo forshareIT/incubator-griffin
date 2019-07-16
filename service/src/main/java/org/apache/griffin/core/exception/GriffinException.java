@@ -22,6 +22,7 @@ package org.apache.griffin.core.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+@SuppressWarnings("serial")
 public abstract class GriffinException extends RuntimeException {
 
     GriffinException(String message) {
@@ -59,4 +60,9 @@ public abstract class GriffinException extends RuntimeException {
         }
     }
 
+    public static class UnImplementedException extends GriffinException {
+        public UnImplementedException(String message) {
+            super(message);
+        }
+    }
 }

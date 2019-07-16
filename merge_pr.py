@@ -8,9 +8,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -56,15 +56,15 @@ JIRA_PASSWORD = os.environ.get("JIRA_PASSWORD", "")
 # https://github.com/settings/tokens. This script only requires the "public_repo" scope.
 GITHUB_OAUTH_KEY = os.environ.get("GITHUB_OAUTH_KEY")
 
-GITHUB_BASE = "https://github.com/apache/incubator-griffin/pull"
-GITHUB_API_BASE = "https://api.github.com/repos/apache/incubator-griffin"
+GITHUB_BASE = "https://github.com/apache/griffin/pull"
+GITHUB_API_BASE = "https://api.github.com/repos/apache/griffin"
 JIRA_BASE = "https://issues.apache.org/jira/browse"
 JIRA_API_BASE = "https://issues.apache.org/jira"
 # Prefix added to temporary branches
 BRANCH_PREFIX = "PR_TOOL"
 
-PR_REPO = "https://github.com/apache/incubator-griffin.git"
-PUSH_REPO = "https://git-wip-us.apache.org/repos/asf/incubator-griffin.git"
+PR_REPO = "https://github.com/apache/griffin.git"
+PUSH_REPO = "https://gitbox.apache.org/repos/asf/griffin.git"
 
 
 def get_json(url):
@@ -139,8 +139,8 @@ def merge_pr(pr_num, target_ref, title, body, pr_repo_desc):
     distinct_authors = sorted(set(commit_authors),
                               key=lambda x: commit_authors.count(x), reverse=True)
     primary_author = raw_input(
-            "Enter primary author in the format of \"name <email>\" [%s]: " %
-            distinct_authors[0])
+        "Enter primary author in the format of \"name <email>\" [%s]: " %
+        distinct_authors[0])
     if primary_author == "":
         primary_author = distinct_authors[0]
 
@@ -290,8 +290,8 @@ def resolve_jira_issue(merge_branches, comment, default_jira_id="5"):
     resolve = filter(lambda a: a['name'] == "Resolve Issue", asf_jira.transitions(jira_id))[0]
     resolution = filter(lambda r: r.raw['name'] == "Fixed", asf_jira.resolutions())[0]
     asf_jira.transition_issue(
-            jira_id, resolve["id"], fixVersions=jira_fix_versions,
-            comment=comment, resolution={'id': resolution.raw['id']})
+        jira_id, resolve["id"], fixVersions=jira_fix_versions,
+        comment=comment, resolution={'id': resolution.raw['id']})
 
     print "Successfully resolved %s with fixVersions=%s!" % (jira_id, fix_versions)
 

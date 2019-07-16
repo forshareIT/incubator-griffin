@@ -19,32 +19,50 @@ under the License.
 
 package org.apache.griffin.core.measure.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import org.apache.commons.lang.StringUtils;
+import org.apache.griffin.core.util.JsonUtil;
 
-import javax.persistence.Entity;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "measure.type")
-@JsonSubTypes({@JsonSubTypes.Type(value = GriffinMeasure.class, name = "griffin"), @JsonSubTypes.Type(value = ExternalMeasure.class, name = "external")})
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY,
+        property = "measure.type")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = GriffinMeasure.class, name = "griffin"),
+        @JsonSubTypes.Type(value = ExternalMeasure.class, name = "external")})
 public abstract class Measure extends AbstractAuditableEntity {
     private static final long serialVersionUID = -4748881017029815714L;
 
     @NotNull
     protected String name;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     protected String owner;
 
-    private String dqType;
+    @Enumerated(EnumType.STRING)
+    private DqType dqType;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String description;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String organization;
+
+    @Transient
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<String> sinksList = Arrays.asList("ELASTICSEARCH", "HDFS");
+
+    @JsonIgnore
+    private String sinks;
 
     private boolean deleted = false;
 
@@ -57,12 +75,11 @@ public abstract class Measure extends AbstractAuditableEntity {
     }
 
     @JsonProperty("dq.type")
-    public String getDqType() {
+    public DqType getDqType() {
         return dqType;
     }
 
-    @JsonProperty("dq.type")
-    public void setDqType(String dqType) {
+    public void setDqType(DqType dqType) {
         this.dqType = dqType;
     }
 
@@ -90,6 +107,23 @@ public abstract class Measure extends AbstractAuditableEntity {
         this.owner = owner;
     }
 
+    @JsonProperty("sinks")
+    public List<String> getSinksList() {
+        return sinksList;
+    }
+
+    public void setSinksList(List<String> sinksList) {
+        this.sinksList = sinksList;
+    }
+
+    private String getSinks() {
+        return sinks;
+    }
+
+    private void setSinks(String sinks) {
+        this.sinks = sinks;
+    }
+
     public boolean isDeleted() {
         return deleted;
     }
@@ -98,10 +132,27 @@ public abstract class Measure extends AbstractAuditableEntity {
         this.deleted = deleted;
     }
 
+    @PrePersist
+    @PreUpdate
+    public void save() throws JsonProcessingException {
+        if (sinksList != null) {
+            this.sinks = JsonUtil.toJson(sinksList);
+        }
+    }
+
+    @PostLoad
+    public void load() throws IOException {
+        if (!StringUtils.isEmpty(sinks)) {
+            this.sinksList = JsonUtil.toEntity(sinks, new TypeReference<List<String>>() {
+            });
+        }
+    }
+
     public Measure() {
     }
 
-    public Measure(String name, String description, String organization, String owner) {
+    public Measure(String name, String description, String organization,
+                   String owner) {
         this.name = name;
         this.description = description;
         this.organization = organization;

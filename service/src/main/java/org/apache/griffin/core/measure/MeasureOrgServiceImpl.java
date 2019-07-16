@@ -19,16 +19,20 @@ under the License.
 
 package org.apache.griffin.core.measure;
 
-import org.apache.griffin.core.measure.entity.GriffinMeasure;
-import org.apache.griffin.core.measure.entity.Measure;
-import org.apache.griffin.core.measure.repo.GriffinMeasureRepo;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import static org.apache.griffin.core.exception.GriffinExceptionMessage.ORGANIZATION_NAME_DOES_NOT_EXIST;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.griffin.core.exception.GriffinException;
+import org.apache.griffin.core.measure.entity.GriffinMeasure;
+import org.apache.griffin.core.measure.entity.Measure;
+import org.apache.griffin.core.measure.repo.GriffinMeasureRepo;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class MeasureOrgServiceImpl implements MeasureOrgService {
@@ -43,9 +47,10 @@ public class MeasureOrgServiceImpl implements MeasureOrgService {
 
     @Override
     public List<String> getMetricNameListByOrg(String org) {
-        List<String> orgs =  measureRepo.findNameByOrganization(org, false);
+        List<String> orgs = measureRepo.findNameByOrganization(org, false);
         if (CollectionUtils.isEmpty(orgs)) {
-            throw new GriffinException.NotFoundException(ORGANIZATION_NAME_DOES_NOT_EXIST);
+            throw new GriffinException.NotFoundException
+                    (ORGANIZATION_NAME_DOES_NOT_EXIST);
         }
         return orgs;
     }
@@ -54,13 +59,12 @@ public class MeasureOrgServiceImpl implements MeasureOrgService {
     public Map<String, List<String>> getMeasureNamesGroupByOrg() {
         Map<String, List<String>> orgWithMetricsMap = new HashMap<>();
         List<GriffinMeasure> measures = measureRepo.findByDeleted(false);
-        if (measures == null) {
-            return null;
-        }
         for (Measure measure : measures) {
             String orgName = measure.getOrganization();
+            orgName = orgName == null ? "null" : orgName;
             String measureName = measure.getName();
-            List<String> measureList = orgWithMetricsMap.getOrDefault(orgName, new ArrayList<>());
+            List<String> measureList = orgWithMetricsMap.getOrDefault(orgName,
+                    new ArrayList<>());
             measureList.add(measureName);
             orgWithMetricsMap.put(orgName, measureList);
         }
@@ -68,8 +72,11 @@ public class MeasureOrgServiceImpl implements MeasureOrgService {
     }
 
     @Override
-    public Map<String, Map<String, List<Map<String, Object>>>> getMeasureWithJobDetailsGroupByOrg(Map<String, List<Map<String, Object>>> jobDetails) {
-        Map<String, Map<String, List<Map<String, Object>>>> result = new HashMap<>();
+    public Map<String, Map<String, List<Map<String, Object>>>>
+    getMeasureWithJobDetailsGroupByOrg(Map<String,
+            List<Map<String, Object>>> jobDetails) {
+        Map<String, Map<String, List<Map<String, Object>>>> result =
+                new HashMap<>();
         List<GriffinMeasure> measures = measureRepo.findByDeleted(false);
         if (measures == null) {
             return null;
@@ -78,8 +85,10 @@ public class MeasureOrgServiceImpl implements MeasureOrgService {
             String orgName = measure.getOrganization();
             String measureName = measure.getName();
             String measureId = measure.getId().toString();
-            List<Map<String, Object>> jobList = jobDetails.getOrDefault(measureId, new ArrayList<>());
-            Map<String, List<Map<String, Object>>> measureWithJobs = result.getOrDefault(orgName, new HashMap<>());
+            List<Map<String, Object>> jobList = jobDetails
+                    .getOrDefault(measureId, new ArrayList<>());
+            Map<String, List<Map<String, Object>>> measureWithJobs = result
+                    .getOrDefault(orgName, new HashMap<>());
             measureWithJobs.put(measureName, jobList);
             result.put(orgName, measureWithJobs);
         }
